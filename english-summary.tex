@@ -21,6 +21,7 @@
 \usepackage{enumitem}
 \usepackage{csquotes}
 \usepackage{graphicx}
+\usepackage{rotating}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning}
 \usepackage[colorlinks=true,linkcolor=black,urlcolor=black,citecolor=black]{hyperref}
@@ -1216,15 +1217,22 @@ port is implicit in the return of control, and the backtracking port is
 \texttt{return-from prover}, which passes branch-point identifiers up to the
 parent node in the search tree.
 
-\begin{figure}[htbp]
+\begin{sidewaysfigure}
 \centering
-\includegraphics[width=0.82\textwidth]{figs/five-port.png}
-\caption{The five-port model. A rule has two entries --- \textsc{main entry} and
-\textsc{re-enter entry} --- and three exits: \textsc{positive} (the rule applied),
-\textsc{negative} (it did not), and \textsc{backtrack}. A rule application chain
-is built by wiring one rule's exits to the next rule's entries, which is what
-makes a search strategy something you compose rather than something you code.}
-\end{figure}
+\includegraphics[width=0.96\textheight]{figs/prover-chain.png}
+\caption{A complete prover as a wired rule application chain --- the main phase
+of an $\mathcal{ALC}$ ABox satisfiability prover. Each rule is a box with the
+five ports: two entries (\emph{main}, open diamond at left, and \emph{re-enter},
+open diamond at the bottom) and three exits (\emph{positive} and \emph{negative},
+filled diamonds at right, and \emph{backtrack}, filled diamond at the bottom).
+The strategy is the wiring: \textsc{deterministic-expansion} runs first, its
+\textsc{neg} exit passes to \textsc{or-expansion}, whose \textsc{neg} exit passes
+to \textsc{some-expansion}, whose \textsc{neg} exit is \emph{success} --- nothing
+left to expand. Each \textsc{pos} exit loops back to the top, creating the fresh
+incarnation a nondeterministic rule needs, and the backtrack exits run to
+\emph{fail}. This is the same prover as the \texttt{define-prover} listing
+below, drawn.}
+\end{sidewaysfigure}
 
 Provers are then assembled from those chains by a second macro,
 \texttt{define-prover}, whose argument list \emph{is} a coordinate in the
