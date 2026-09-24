@@ -11,6 +11,13 @@ and are referenced rather than re-derived. The exposed surface is therefore
 definitions and specifications, and that is where all of these sit. None affects
 the implementation.
 
+**Provenance.** This list came out of an AI-assisted re-reading of the thesis in
+2026 (Claude, working from the original LaTeX sources and the `nRQL-9-9-9`
+code). Every item below is stated so that it can be checked directly against the
+cited definition or source file, which is how it should be used — including
+item 1, where the initial reading of the specification turned out to be right
+about the definition and wrong about the implementation.
+
 ---
 
 ## 1. The QBox definition is not acyclic as written
