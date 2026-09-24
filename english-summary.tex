@@ -1216,6 +1216,60 @@ port is implicit in the return of control, and the backtracking port is
 \texttt{return-from prover}, which passes branch-point identifiers up to the
 parent node in the search tree.
 
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.82\textwidth]{figs/five-port.png}
+\caption{The five-port model. A rule has two entries --- \textsc{main entry} and
+\textsc{re-enter entry} --- and three exits: \textsc{positive} (the rule applied),
+\textsc{negative} (it did not), and \textsc{backtrack}. A rule application chain
+is built by wiring one rule's exits to the next rule's entries, which is what
+makes a search strategy something you compose rather than something you code.}
+\end{figure}
+
+Provers are then assembled from those chains by a second macro,
+\texttt{define-prover}, whose argument list \emph{is} a coordinate in the
+MiDeLoRa space $T \times DL \times K$, and whose body names the three operational
+phases. An $\mathcal{ALCH}$ ABox satisfiability prover reads in full:
+
+{\small
+\begin{verbatim}
+(define-prover ((abox-sat alch abox))
+  (:init
+   (perform (initial-abox-saturation)
+     (:body
+      (start-main))))
+  (:main
+      (perform (deterministic-expansion)
+        (:body
+         (if clashes
+             (handle-clashes)
+           (perform (or-expansion)
+             (:positive
+              (if clashes
+                  (handle-clashes)
+                (restart-main)))
+             (:negative
+                 (perform (some-expansion)
+                   (:positive
+                    (if clashes
+                        (handle-clashes)
+                      (restart-main)))
+                   (:negative
+                    (success)))))))))
+  (:success
+   (completion-found)))
+\end{verbatim}
+}
+
+\noindent
+That is the whole prover. The tableau strategy is visible as structure rather
+than buried in control flow: \texttt{perform} fires a rule and dispatches on its
+ports, so \texttt{:positive} and \texttt{:negative} are literally the exits in the
+figure above. \texttt{restart-main} creates a fresh incarnation after a
+nondeterministic rule fired --- the stack discipline the architecture requires ---
+and a phase left undefined simply inherits by CLOS semantics, or can request
+another prover's implementation with \texttt{:inherit-from}.
+
 The performance decision is the interesting one. \texttt{defrule} does not define
 the rule directly --- it defines a method returning a \textbf{code template}, and
 the rule application chain selects templates by $DL \times K$ at

@@ -4,7 +4,7 @@ PhD thesis by **Michael Wessel**, Technische Universität Hamburg-Harburg.
 Submitted **2005**, defended **14 April 2008**. Supervisor: Prof. Dr. Ralf Möller,
 Institute for Software Systems (STS).
 
-> **The thesis is in German. [An extended English summary is in this repository](english-summary.pdf) (35 pp)** — written so an English reader can judge the work without reading the German, and without taking anything on trust. It closes with an assessment of whether the thesis delivered on its own title.
+> **The thesis is in German. [An extended English summary is in this repository](english-summary.pdf) (37 pp)** — written so an English reader can judge the work without reading the German, and without taking anything on trust. It closes with an assessment of whether the thesis delivered on its own title.
 
 This repository is a hub. It connects the dissertation to the systems it
 describes — [Racer and nRQL](https://github.com/lambdamikel/Racer),
