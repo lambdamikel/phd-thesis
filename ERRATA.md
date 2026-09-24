@@ -72,62 +72,66 @@ specification describes a simplification of the implemented design.
 
 ---
 
-## 2. The dependency-directed backtracking algorithm (Chapter 6)
+## 2. The DDB description in Chapter 6 (a description issue, not a claim)
 
-**Chapter 6, \"What the command history unlocks\", item 2.** The thesis describes
-a two-phase marking algorithm for true dependency-directed backtracking (DDB), as
-opposed to the weaker backjumping (DDJ) that contemporary reasoners used. Two
-problems in the description, and one fact about the implementation.
+**Chapter 6, \"Potentials opened up by the command history\", item 2.**
 
-### The traversal runs in the wrong direction
+First, what this is *not*. The thesis makes no claim that dependency-directed
+backtracking (DDB) was implemented. The section is titled **Potentials**, says
+the architecture permits their evaluation **\"in principle\"**, introduces the
+mechanism as something that **\"can optionally\"** be recorded **\"if DDB is
+desired\"**, argues in the subjunctive throughout, and closes by stating that
+these potentials were **\"not all realised\"** in the work. It is a design
+sketch, presented as one.
+
+As a description, though, it has one defect worth recording.
+
+### The traversal is described in the wrong direction
 
 The slot is introduced as recording **\"which other command objects are causal
-for the executed action\"** — that is, *backward* pointers to an action's own
-causes. Phase 1 then says that by traversing **those same associations** one
-identifies *\"the ends of the command-**effect** causal chain\"*.
+for the executed action\"** — *backward* pointers, an action's causes. Phase 1
+then says that traversing **those same associations** identifies *\"the ends of
+the command-**effect** causal chain\"*. Effects run forward; causes run
+backward. Following an action's causes cannot reach its effects. Either the slot
+is forward-pointing and the gloss is wrong, or phase 1 should traverse
+`postcondition-…`. Both cannot hold.
 
-Effects run forward; causes run backward. Following an action's causes cannot
-reach its effects. Either the slot is forward-pointing and the gloss is wrong, or
-the gloss is right and phase 1 should traverse `postcondition-…` instead. As
-written the two cannot both hold.
+Relatedly, the AND/OR semantics of multiple supports is left open. Phase 2
+unmarks any command having an unmarked support, so an action survives if *any*
+support survives — right for alternative justifications, wrong for the
+conjunctive premises of a single rule application. For a sketch that is a
+reasonable omission; for anyone implementing it, it is the first thing to pin
+down.
 
-### The AND/OR semantics of multiple supports is unspecified
+### What the implementation actually does
 
-Phase 2 unmarks any command having an **unmarked** support, so an action survives
-if *any* of its supports survives. That is correct if multiple entries are
-**alternative justifications**, as in a truth maintenance system.
+The fine-grained causal machinery is indeed unused. `precondition-for-actions`
+and `postcondition-for-actions` are declared on `abox-item` and occur in exactly
+two places across the whole repository — that declaration and `copy-node`'s copy
+list. Never written, never read. The two-phase marking algorithm has no
+implementation.
 
-It is wrong if they are the **conjunctive premises of one rule application** —
-which is the normal case in a tableau, where a rule fires only when all its
-premises are present. Under that reading an action must be retracted as soon as
-*any* premise is, and the algorithm would keep assertions whose justification has
-been destroyed. The thesis does not say which reading is intended, and the two
-give different results whenever a command has more than one support.
+**But the principle behind DDB is implemented, by another route.** Under
+*retention of deterministic assertions*, MiDeLoRa deliberately does **not**
+`rollback-to` the start of a tableau expansion after a satisfiability test.
+Instead it **selectively removes only the assertions `A` with
+`choice_points(A) ≠ ∅`** — the nondeterministic ones — and keeps the
+deterministic remainder, which is logically implied and therefore still valid.
 
-### It was never implemented
+Given `{i : ∃R.C, j : A ⊔ B}` with completion
+`{…, (i,k):R, k:C, j:A}`, only `j:A` depends on a choice. It is removed; the
+rest survives, so the next satisfiability test skips re-expanding `i : ∃R.C`
+entirely.
 
-Checked against the [MiDeLoRa sources](https://github.com/lambdamikel/MiDeLoRa).
-The slots exist and are properly declared on `abox-item`:
+That *is* dependency-directed selective retraction — keep what does not depend on
+a choice, discard what does. It operates at tableau-expansion boundaries using
+choice-point sets rather than per clash using a causal chain. Chapter 7 measures
+it: the average ABox unsatisfiability test drops from **12 s to about 3.7 s**.
 
-```lisp
-(choice-points             :initform nil :initarg :choice-points)
-(precondition-for-actions  :initform nil :initarg :precondition-for-actions)
-(postcondition-for-actions :initform nil :initarg :postcondition-for-actions)
-```
-
-Across the entire repository these two slots occur in exactly **two** places:
-that declaration, and the list of slots `copy-node` copies. They are never
-written, never read, and never traversed. No marking algorithm exists.
-
-What *is* implemented is `global-rollback` — **chronological** rollback of the
-command history, whose cost is the 20.2 s reported in Chapter 7 — together with
-`sort-choice-points`, which supports backjumping. So MiDeLoRa does DDJ, and the
-DDB design remained a design.
-
-This is consistent with the thesis's own statement that these potentials were
-\"not all realised\"; it pins down exactly which one was not. It also explains
-the direction error: a description never disciplined by a working implementation
-has nothing to catch it.
+So the accurate summary is narrower than \"DDB was never built\": the *coarse*
+dependency-directed retention ships and is measured; the *fine-grained* per-clash
+variant remained a sketch, and it is that sketch which carries the direction
+error above.
 
 *(Minor, same area: the thesis calls the inverse slot `postcondition-of-actions`;
 the code calls it `postcondition-for-actions`.)*

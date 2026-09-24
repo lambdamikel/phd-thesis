@@ -1029,11 +1029,24 @@ systems:
 \end{enumerate}
 
 The chapter is candid that these are mostly \emph{enabled} rather than realised,
-and the sources bear that out precisely: the two causal slots are declared on
-\texttt{abox-item} but never written or read anywhere in MiDeLoRa, and no marking
-algorithm exists. What ships is chronological \texttt{global-rollback} together
-with \texttt{sort-choice-points} --- backjumping, not backtracking. The DDB
-design remained a design.
+and the sources refine that usefully. The fine-grained causal machinery is
+unused: \texttt{precondition-for-actions} and its inverse are declared on
+\texttt{abox-item} but never written or read, and the two-phase marking
+algorithm has no implementation.
+
+The \emph{principle}, however, ships --- by another route. Under
+\textbf{retention of deterministic assertions}, MiDeLoRa deliberately does not
+roll back to the start of a tableau expansion after a satisfiability test.
+Instead it removes only the assertions $A$ with
+$\mathit{choice\_points}(A) \neq \emptyset$ --- those that depend on a choice ---
+and keeps the deterministic remainder, which is logically implied and so remains
+valid. The next satisfiability test then skips re-expanding what survived.
+Chapter 7 measures the effect: the average ABox unsatisfiability test falls from
+\textbf{12\,s to about 3.7\,s}.
+
+So dependency-directed retraction is real here, at the granularity of tableau
+expansions and keyed on choice-point sets. What stayed a sketch is the per-clash
+variant driven by the causal chain.
 
 The chapter also asks the right sceptical question of itself: whether thoroughgoing OOP will
 cause performance and memory problems. It notes the mitigation --- resolving
