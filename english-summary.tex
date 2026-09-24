@@ -498,13 +498,15 @@ substrates needed for the two guiding domains are identified.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.86\textwidth]{figs/rcc-browser.png}
-\caption{An RCC substrate rendered by the substrate browser. Nodes carry region
-names; each edge is labelled with the qualitative spatial relation that holds
-between the two regions --- \textsc{tpp} (tangential proper part),
-\textsc{ntpp} (non-tangential proper part), \textsc{po} (partial overlap),
-\textsc{eq}. This is the extensional layer a spatial-thematic query is evaluated
-against: no coordinates, only the relations.}
+\includegraphics[width=0.74\textwidth]{figs/rcc-browser.png}
+\caption{The substrate browser on an RCC substrate --- here an RBox ABox of 8
+nodes and 64 edges, reported consistent. Every edge carries the qualitative
+spatial relation holding between two regions (\textsc{pp}, \textsc{ppi},
+\textsc{eq} and their inverses); there are no coordinates anywhere, which is
+what makes the reasoning qualitative. The lower pane shows the internals of a
+node label --- the expanded and unexpanded concept sets, the \textsc{ands},
+\textsc{ors}, \textsc{somes}, \textsc{alls} and number restrictions --- i.e.\ the
+tableau state of that node, inspectable while the prover runs.}
 \end{figure}
 
 \begin{note}
@@ -602,11 +604,39 @@ negation normal form, disjunctive normal form, the clause set $\mathcal{M}(q)$,
 arity unification across disjuncts, and individual substitution. These are what
 make the optimiser of Chapter 5 possible.
 
-Three further readings of the same language are given: a first-order
-interpretation, a logic-programming perspective, and an \textbf{alternative
-algebraic semantics} built from projection, cylindrification, diagonals and the
-$\mathbf{1}$-vector --- essentially a cylindric-algebra account, which connects
-the language to relational algebra.
+\paragraph{Two formal semantics, deliberately.}
+The query language is then given a \emph{second}, independent formal semantics,
+and the pair is the point.
+
+The first is \textbf{logic-based}: the extension of a query is defined through
+entailment, by translating bodies into first-order formulae via $\Phi$ and asking
+what the substrate entails. It says \emph{what the correct answer is}, and says
+it in the same currency as the substrate's own semantics and the description
+logic underneath. A logic-programming reading is given alongside it.
+
+The second is \textbf{algebraic}. The extension of a body is constructed
+directly by set operations over the extensions of its sub-bodies: $\wedge$,
+$\vee$ and $\setminus$ become $\cap$, $\cup$ and $\setminus$ on sets of $n$-ary
+tuples. Because those operations need uniform arity, two further operations are
+defined --- \emph{projection} to reduce dimensionality and its inverse,
+\emph{cylindrification}, to raise it --- together with diagonals and the
+$\mathbf{1}$-vector. That is the vocabulary of cylindric algebra, and the
+justification offered is the known equivalence of non-recursive negation-free
+Datalog with relational algebra.
+
+The division of labour is what matters. The logical semantics is the
+\emph{specification}: it fixes what an answer means, and it is what lets query
+subsumption and satisfiability be posed as inference problems at all. The
+algebraic semantics is \emph{constructive} --- the thesis notes it is
+correspondingly implementation-near --- and it is essentially the blueprint the
+query engine of Chapter 5 follows, which is why that engine's optimiser reasons
+about generators, testers and cross products rather than about entailment.
+
+The two are presented as alternative accounts of the same language rather than
+proved equivalent; the argument for their agreement rests on the Datalog and
+relational-algebra correspondence. Giving both is unusual, and it is the reason
+the language can be specified logically and evaluated like a database query
+without the two descriptions drifting apart.
 
 \subsection{Inference problems for queries, and the QBox}
 
