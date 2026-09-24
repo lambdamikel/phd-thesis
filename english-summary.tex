@@ -77,6 +77,30 @@ design space rather than single points.
 \tableofcontents
 \clearpage
 
+\section{Why this document exists}
+
+The dissertation it summarises is 586 pages long and written in German. For most
+of the people who might now have a reason to know what is in it --- colleagues in
+industry, researchers working on description logics, graph databases, query
+engines or reasoning systems --- that makes it effectively unreadable. The work
+is open access and carries a DOI, and is still almost impossible to assess.
+
+This document is therefore a \textbf{record}: what the work set out to do, what
+was actually built, what was measured, and what it achieved. It is intended to
+give a reader enough context to judge the work and the background it reflects,
+without reading the German and without taking anything on trust.
+
+That last point governs how it is written. Claims are tied to things a reader can
+check --- measurements from the evaluation chapter with their figures, class and
+method names from the published sources, dates from the bibliography. Where a
+technique disappointed, the measured factor is given. Where something was
+designed but not implemented, that is said. The companion errata lists defects
+found on re-reading, including one that turned out to be a defect in the
+specification rather than the code.
+
+A summary that reported only successes would be less useful for its purpose, not
+more. The point is to let someone form their own view.
+
 \section{How to read this summary}
 
 The thesis divides into three movements. Chapters 1--2 set the problem and the
@@ -1365,6 +1389,64 @@ years before SPARQL~1.1 (March 2013). Citing only the 2008 publication date
 understates the priority by three years and places the work \emph{after}
 SPARQL~1.0 rather than before it.
 \end{note}
+
+\section{Did it deliver on its title?}
+
+The thesis set itself a programme in its own title: \emph{flexible and
+configurable software architectures for data-intensive ontology-based information
+systems}. Taking the terms one at a time, and reading them as an engineer would
+rather than as a marketing department might:
+
+\textbf{Flexible --- yes, and demonstrably.} This is the best-supported claim in
+the work, because it was made falsifiable. The test was whether one framework
+could serve two domains chosen to pull in opposite directions: LUBM, which is
+large, shallow and conjunctive, and the DISK, which is small, deep and spatially
+hybrid. It served both. One data model was instantiated as description logic
+ABoxes, RDF graphs, RCC networks, data substrates and geometric substrates; four
+query languages were built on one framework; provers were assembled along two
+language strands plus task-specific ones. \enquote{Regions rather than points}
+turned out to be an operational statement about a dispatch lattice, not a slogan.
+
+\textbf{Configurable --- yes.} Configurability is shown the only way it can be,
+by exhibiting configurations that work: the rule definition language for
+building provers, the substrate and atom class lattice, and nRQL's four modes
+plus its two-phase and incremental operation, which make the resource/completeness
+trade-off a runtime choice rather than a design-time one.
+
+\textbf{Software architectures --- yes.} Three frameworks that share one data
+model, an explicit comparison of layered, semi-integrated and integrated designs,
+and a reasoned commitment to the integrated one on cohesion grounds.
+
+\textbf{Data-intensive --- partly, and the thesis says so.} This is the weakest
+term and the one where the honest answer is qualified. LUBM at ten universities on
+2006 hardware with apparently linear scaling is a real result. But MiDeLoRa in
+complete mode managed one university --- 17,174 individuals --- with a 350.8\,s
+initial satisfiability test, the DISK needed the smaller maps, and the thesis
+describes its own successes as \enquote{fragile}, resting on incomplete methods
+that settle 99.98\,\% of instance tests by luck as much as design. Its own verdict
+is that the satisfiability test needs one to two orders of magnitude of speedup
+before the results are robust. \emph{Data-intensive} is achieved in the sense that
+scalability was addressed, measured, and shown to be non-exponential --- not in
+the sense that these systems would stand next to a relational database.
+
+That distinction deserves precision rather than modesty. DLMAPS and MiDeLoRa were
+research prototypes and are described as such. nRQL was not: it shipped inside a
+commercial reasoner, was used in production, and was the first Semantic Web
+repository to answer the LUBM queries completely. One component crossed into real
+use; the others demonstrated that the framework could produce them.
+
+\textbf{Overall.} Three of the four terms are delivered convincingly and the
+fourth partially and honestly. A fair summary is that the thesis achieved the
+architectural programme it set itself and fell short of the performance
+programme --- which is the ordinary outcome when a research prototype is measured
+against systems with orders of magnitude more engineering behind them, and is
+stated plainly in the evaluation rather than glossed.
+
+The work's most durable contribution is arguably not announced in the title at
+all. The reasoner construction kit of Chapter 6 --- provers as points in a space,
+the tableau as a first-class inspectable object, the proof process itself
+represented as data --- is the part that had no real counterpart then and still
+has few now.
 
 \clearpage
 \section{Appendix: what holds up, and what doesn't}
