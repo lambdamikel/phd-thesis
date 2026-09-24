@@ -35,8 +35,9 @@
 
 % Pull-out note, used for calibration remarks and editorial asides
 \newenvironment{note}
-  {\begin{trivlist}\item[]\leftskip=1.5em \rightskip=1.5em \small}
-  {\end{trivlist}}
+  {\begin{list}{}{\setlength{\leftmargin}{1.5em}\setlength{\rightmargin}{1.5em}%
+                  \setlength{\listparindent}{0pt}}\item[]\small}
+  {\end{list}}
 
 % DL notation
 \newcommand{\ALC}{\ensuremath{\mathcal{ALC}}}
@@ -353,6 +354,38 @@ exploit a spatial index. It also insists on \emph{node} annotations and not only
 edge annotations, since the structure of a richly-structured node is not well
 understood as a set of property-value pairs.
 
+\begin{note}
+\textbf{This is where the property-graph bridge is.} The requirement is argued
+here in exactly the vocabulary of property graphs. The thesis asks for
+annotations on \emph{both} nodes and edges; remarks in passing that node
+annotations are \enquote{attribute-value or \textbf{property-value pairs}}; and
+notes that OWL calls roles \enquote{Properties}. It then rejects the pure
+edge-annotation view --- everything decomposed into triples --- as inadequate.
+
+What is worth noticing is that it rejects the property-value-pair view
+\emph{as well}: \enquote{the structure of the node itself cannot really be
+understood as a set of property-value pairs.} A DISK polygon is an instance of a
+spatial datatype with its own index, not a bag of keys and values. The property
+graph therefore appears here as a \emph{considered and rejected middle
+position}, not as an unwitting anticipation --- and the substrate passes it in
+two specific ways:
+
+\begin{itemize}
+\item node and edge labels are expressions of an arbitrary description language,
+  evaluated by \textbf{entailment} rather than retrieved by lookup --- so an
+  edge annotation can be a logical statement a reasoner must prove, not a value
+  a store returns;
+\item nodes may carry internal structure that no key-value map captures, which
+  is what the geometric and spatial substrates need.
+\end{itemize}
+
+For a reader arriving from property graphs, GQL, or RDF-star --- all of which
+exist because annotating and querying edges as first-class objects turned out to
+matter --- this passage, not the formal definition in Chapter 4, is the one to
+read. It is the same problem statement, reached in 2005 from the description
+logic side, and then pushed past the answer the industry later settled on.
+\end{note}
+
 \textbf{A framework for defining query languages}, matching the data model:
 optionally hybrid, adaptable per instantiation, formalisable, and efficiently
 implementable.
@@ -443,11 +476,57 @@ theorem-proving request. This is the hinge of the whole design --- \emph{each
 query atom is an entailment question, not a lookup} --- and it is what makes the
 query engine and the reasoner inseparable.
 
-\textbf{Negation as failure} is then added as NAF atoms with their own semantics,
-distinguished carefully from the classical negation available inside concepts.
-Complex queries follow: abstract syntax, the functions $\mathit{objects}(k)$ and
-$\mathit{vars}(k)$, the extension of $\Phi$ to query bodies, the semantics of a
-query, and a $\models_{NAF}$ relation.
+\textbf{Complex queries} are then defined by an \emph{inductive} grammar. A query
+is $\mathit{answer}(\vec{x}) \leftarrow k$, and a body $k$ is either an atom or
+one of four constructs over bodies $k_1, \ldots, k_n$:
+
+\begin{center}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+$\setminus (k_i)$ & negation as failure \\
+$(k_1 \wedge \cdots \wedge k_n)$ & conjunction \\
+$(k_1 \vee \cdots \vee k_n)$ & disjunction \\
+$\pi(\vec{x})\, k_1$ & projection, where every object of $\vec{x}$ occurs in $k_1$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Because the grammar is inductive, the operators apply to \emph{arbitrary
+sub-bodies} rather than only to atoms. That is the substantive point: $\pi$ is a
+compositional projection operator producing a new relation from a sub-body --- a
+subquery --- and $\setminus$ applies to a body, so $\setminus(\pi(\vec{x})\,k)$
+is a \emph{negated projected subquery}. The remaining machinery follows:
+$\mathit{objects}(k)$ and $\mathit{vars}(k)$, the extension of $\Phi$ to bodies,
+the semantics of a query, and a $\models_{NAF}$ relation.
+
+\begin{note}
+\textbf{Two negations, deliberately kept apart.} The thesis is careful that
+negation-as-failure is \emph{not} the negation already available inside an atom.
+Even when the node query language offers it --- $(a, \neg C)$ in an
+$\mathcal{ALC}$ instance query --- the complement $V \setminus (a,C)^\mathcal{E}$
+and the extension $(a, \neg C)^\mathcal{E}$ do not coincide, because substrates
+make no closed-world assumption. One is \emph{not provably $C$}; the other is
+\emph{provably not $C$}. A query language over an open-world knowledge base needs
+both, and needs the boundary between them visible rather than conflated. Few
+query languages of the period drew it explicitly.
+\end{note}
+
+\begin{note}
+\textbf{What SPARQL and SHACL reached later.} Subqueries, negated subqueries,
+projection operators and the mixing of the two negations were all present in this
+grammar in 2005 and implemented in nRQL. SPARQL~1.0 became a Recommendation in
+January 2008 with neither subqueries nor negation; both arrived with
+SPARQL~1.1 in March 2013, as \texttt{NOT EXISTS}, \texttt{MINUS} and nested
+\texttt{SELECT}. SHACL's constraint patterns cover much of the same ground again
+--- a coding of the W3C SHACL Core test suite finds 73.5\,\% of its constraints
+have a direct nRQL counterpart.
+
+The distinctive part is not that the individual features appeared early. It is
+that they were defined over \emph{one inductive grammar}, so they compose: any
+body can be projected, and any projection can be negated. Feature lists converge;
+a grammar that makes them compose is a design.
+\end{note}
 
 Considerable work then goes into \textbf{semantics-preserving transformations}:
 negation normal form, disjunctive normal form, the clause set $\mathcal{M}(q)$,

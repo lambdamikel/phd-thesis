@@ -66,13 +66,18 @@ graph, an RCC network, or a map of spatial objects. Its *data substrate* variant
 and with no documented influence on later graph
 databases](https://github.com/lambdamikel/shacl-nrql-comparison).
 
-**nRQL** — an expressive conjunctive ABox and Semantic Web query language with
-negation as failure, negated roles, constraint atoms and projection operators,
-plus *incomplete* and *two-phase* modes that trade completeness for resources. It
-shipped inside RacerPro and was used in production. It also has a real
-**cost-based query optimiser**: plans assign each atom a role (generator,
-successor generator, predecessor generator, or tester), and choosing badly costs
-a measured factor of up to **10,000**.
+**nRQL** — an expressive ABox and Semantic Web query language, defined over a
+single *inductive* grammar in which negation-as-failure, conjunction, disjunction
+and a projection operator all apply to arbitrary sub-bodies. Because they
+compose, any sub-body can be projected and any projection negated: **subqueries
+and negated subqueries**, in 2005. SPARQL 1.0 (January 2008) had neither;
+`NOT EXISTS`, `MINUS` and nested `SELECT` arrived with SPARQL 1.1 in March 2013.
+It also keeps **two negations visibly apart** — *not provably C* at query level
+versus *provably not C* inside an atom, which differ because a substrate makes no
+closed-world assumption. And it has a real **cost-based optimiser**: plans assign
+each atom a role (generator, successor generator, predecessor generator, tester),
+and choosing badly costs a measured factor of up to **10,000**. nRQL shipped
+inside RacerPro and was used in production.
 
 **MiDeLoRa** — a **construction kit for description logic reasoners**, where a
 prover is a point in a space of *task × logic × ABox class*. Its central move:
