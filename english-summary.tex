@@ -1029,7 +1029,13 @@ systems:
 \end{enumerate}
 
 The chapter is candid that these are mostly \emph{enabled} rather than realised,
-and asks the right sceptical question of itself: whether thoroughgoing OOP will
+and the sources bear that out precisely: the two causal slots are declared on
+\texttt{abox-item} but never written or read anywhere in MiDeLoRa, and no marking
+algorithm exists. What ships is chronological \texttt{global-rollback} together
+with \texttt{sort-choice-points} --- backjumping, not backtracking. The DDB
+design remained a design.
+
+The chapter also asks the right sceptical question of itself: whether thoroughgoing OOP will
 cause performance and memory problems. It notes the mitigation --- resolving
 dynamic dispatch at compile time where possible, as the query translator already
 did --- and defers the answer to Chapter 7.
