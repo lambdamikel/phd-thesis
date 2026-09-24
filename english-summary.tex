@@ -496,6 +496,17 @@ their model theory, qualitative geometric substrates, and qualitative geometric
 RCC substrates. Inference problems for substrates are then posed, and the
 substrates needed for the two guiding domains are identified.
 
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.86\textwidth]{figs/rcc-browser.png}
+\caption{An RCC substrate rendered by the substrate browser. Nodes carry region
+names; each edge is labelled with the qualitative spatial relation that holds
+between the two regions --- \textsc{tpp} (tangential proper part),
+\textsc{ntpp} (non-tangential proper part), \textsc{po} (partial overlap),
+\textsc{eq}. This is the extensional layer a spatial-thematic query is evaluated
+against: no coordinates, only the relations.}
+\end{figure}
+
 \begin{note}
 \textbf{A property graph, fused with a reasoner.} The \emph{data substrate} ---
 \texttt{data-node} and \texttt{data-edge}, each carrying key--value property
@@ -974,6 +985,19 @@ concrete syntax demonstrated on the DISK reference queries, and an algorithm for
 deciding subsumption between restricted DISKQL queries. The implementation
 covers the end-user syntax, the spatial atoms, adapted cost estimates for spatial
 edge atoms, and a \emph{Query Inspector} GUI.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{figs/inspector.png}
+\caption{The DLMAPS \emph{Query Inspector}, answering \emph{\enquote{show me all
+residential areas adjacent to a park}} --- in DISKQL,
+\texttt{(AND (?*X WOHNGEBIET) (?*Y PARK) (?*X ?*Y ADJACENT))}. Each answer tuple
+is drawn as its own map crop with the bindings of \texttt{?*X} and \texttt{?*Y}
+highlighted, so a result set is inspected visually rather than read as a table.
+Note the \emph{Abort Search} button and the page counter: results arrive
+incrementally and the search can be stopped while running, which is the
+operational design of the engine made visible.}
+\end{figure}
 
 \section{Chapter 6: MiDeLoRa --- the unpublished chapter}
 
