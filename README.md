@@ -14,6 +14,32 @@ because until now none of those pointed at each other.
 
 ---
 
+## Why this exists
+
+The dissertation is 586 pages long and written in German. For most of the people
+who might now have a reason to know what is in it — colleagues in industry,
+researchers working on description logics, graph databases, query engines or
+reasoning systems — that makes it effectively unreadable. The work is open
+access and carries a DOI, and is still almost impossible to assess.
+
+The English summary is therefore a **record**: what the work set out to do, what
+was actually built, what was measured, and what it achieved. It is meant to give
+a reader enough context to judge the work, and the background it reflects,
+without reading the German and without taking anything on trust.
+
+That last point governs how it is written. Claims are tied to things a reader
+can check — measurements from the evaluation chapter with their figures, class
+and method names from the published sources, dates from the bibliography. Where
+a technique disappointed, the measured factor is given. Where something was
+designed but never implemented, that is said. The errata lists defects found on
+re-reading, including one that turned out to be a defect in the specification
+rather than in the code.
+
+A summary that reported only successes would be less useful for its purpose, not
+more. The point is to let someone form their own view.
+
+---
+
 ## Citing
 
 The dissertation is open access at TUHH with a DOI. **Please cite that, not this repository:**
