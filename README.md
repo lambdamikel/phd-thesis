@@ -54,7 +54,9 @@ Repository record: [tore.tuhh.de/handle/11420/834](https://tore.tuhh.de/handle/1
 > **Note on dates.** The dissertation was **submitted in 2005** and **defended in
 > 2008**; the three-year gap was examination time, not work. The 2005 date is the
 > one that matters for questions of precedence — the content predates the SPARQL 1.0
-> Recommendation (January 2008) entirely.
+> Recommendation (January 2008) entirely. Logos Verlag catalogues the book
+> edition as **2009**, so both years circulate: the dissertation is 2008, the
+> book 2009.
 
 The copy here (`diss-wessel-2008.pdf`) is the *corrected* version deposited with
 the university: identical in content to the Logos edition apart from minor
@@ -109,9 +111,12 @@ inside RacerPro and was used in production.
 prover is a point in a space of *task × logic × ABox class*. Its central move:
 the knowledge base and the tableau are **the same object**, and every mutation is
 logged as a command in an explicit history. That makes the *proof process itself*
-an inspectable data structure — which opens the way to explanation, true
-dependency-directed backtracking, database-style checkpointing and recovery, and
-in principle proof migration. **Chapter 6, which describes it, was never
+an inspectable data structure — which opens the way to explanation,
+database-style checkpointing and recovery, and in principle proof migration.
+Dependency-directed retraction is not merely opened but delivered: assertions
+depending on no choice survive a satisfiability test instead of being rolled
+back, which the evaluation measures at **12 s → 3.7 s** per ABox
+unsatisfiability test. **Chapter 6, which describes it, was never
 published anywhere.**
 
 ---
@@ -169,11 +174,11 @@ reasoner architecture, that chapter is the reason this repository exists.
 
 | File | |
 | --- | --- |
-| [`english-summary.pdf`](english-summary.pdf) | Extended English summary, 21 pp — chapter by chapter |
+| [`english-summary.pdf`](english-summary.pdf) | Extended English summary, 37 pp — chapter by chapter, with figures |
 | `english-summary.tex` | LaTeX source of the summary |
 | `figs/` | Figures used by the summary |
 | `diss-wessel-2008.pdf` | The dissertation (German, 586 pp) |
-| [`ERRATA.md`](ERRATA.md) | Known defects in the thesis, and one that turned out not to be one |
+| [`ERRATA.md`](ERRATA.md) | Six items found on re-reading; two were checked against the source code, and both turned out better than the specification suggested |
 
 ---
 
