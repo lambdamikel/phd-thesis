@@ -20,6 +20,7 @@
 \usepackage{booktabs}
 \usepackage{enumitem}
 \usepackage{csquotes}
+\usepackage{graphicx}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning}
 \usepackage[colorlinks=true,linkcolor=black,urlcolor=black,citecolor=black]{hyperref}
@@ -311,6 +312,17 @@ general related language $\mathcal{ALCRP}(\mathcal{D})$ had already been shown
 \textbf{undecidable}, so the research question is which spatial-thematic
 fragments remain decidable.
 
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{figs/dlmaps.png}
+\caption{The DLMAPS map viewer on the DISK --- the digital city map of
+Hamburg-Öjendorf. Map objects are instances of spatial datatypes in a spatial
+index and simultaneously ABox individuals, so one query can combine thematic
+conditions (\emph{Wohnen}, \emph{Gew\"asser}, \emph{Friedhof}) with qualitative
+spatial ones. The thematic object-key catalogue is at left, the selected
+object's segments at right.}
+\end{figure}
+
 The domain's conclusion is that three things force \emph{special-purpose}
 provers, which standard DL systems cannot supply:
 
@@ -355,6 +367,15 @@ should be usable bottom-up; but reasoners like RacerPro were built under
 different requirements, so special-purpose reasoners may serve better top-down.
 Supporting both perspectives means the ABox query language must be not only
 \emph{definable} for arbitrary DLs but \emph{realisable} on arbitrary DL systems.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.62\textwidth]{figs/owltree.png}
+\caption{The \textsc{OWL Tree}, a browser front end to the Semantic Web
+retrieval service. Conjunctive queries are assembled by growing a tree of
+concepts and roles --- here \texttt{FullProfessor}, \texttt{teacherOf},
+\texttt{GraduateCourse} over the LUBM vocabulary --- and translated into nRQL.}
+\end{figure}
 
 \subsection{The consolidated requirements}
 
@@ -651,6 +672,18 @@ than a tree. Classes are formed by crossing a substrate family with a role:
 \bottomrule
 \end{tabular}
 \end{center}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{figs/dls.png}
+\caption{The $DL$ axis of the MiDeLoRa space as an inheritance lattice. Feature
+mixins on the left (\texttt{DL-WITH-TRANSITIVE-ROLES},
+\texttt{DL-WITH-INVERSE-ROLES}, \texttt{DL-WITH-BLOCKING}, \ldots) compose by
+multiple inheritance into the named logics on the right ---
+$\mathcal{ALCH}$, $\mathcal{ALCHN}$, $\mathcal{ALCHIF}_{R^+}$, and the spatial
+$\mathcal{ALCI}_{RCC}$. A prover is defined at whichever node is appropriate and
+inherits its rules along the lattice.}
+\end{figure}
 
 The consequence is the point. \textbf{Which entailment procedure runs is decided
 per atom, at runtime, by method resolution}, and behaviour can be defined at
