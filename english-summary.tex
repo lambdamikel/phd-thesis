@@ -474,7 +474,8 @@ substrate entails $\Phi(C)$ with $x$ bound to $i$. For a propositional substrate
 that reduces to propositional deduction; for a DL substrate it is a
 theorem-proving request. This is the hinge of the whole design --- \emph{each
 query atom is an entailment question, not a lookup} --- and it is what makes the
-query engine and the reasoner inseparable.
+query engine and the reasoner inseparable. It is also what the implementation's
+dispatch mechanism rests on; see \emph{Multimethods}, below.
 
 \textbf{Complex queries} are then defined by an \emph{inductive} grammar. A query
 is $\mathit{answer}(\vec{x}) \leftarrow k$, and a body $k$ is either an atom or
@@ -579,6 +580,85 @@ classes. Substrates for both guiding domains are then instantiated: the map
 substrates for the GIS, and RacerPro-backed substrates for Semantic Web
 retrieval.
 
+\subsection{Multimethods: choosing the reasoner per atom}
+
+One thread runs through the whole architecture and is easy to miss, because it
+lives in the programming language rather than the formalism. Chapter 4 defines
+the meaning of a query atom as \emph{entailment}. Chapter 5 implements that
+entailment as a \textbf{binary generic function}, dispatched on the pair
+\emph{(description or node type, query atom type)} --- which single-dispatch
+object systems cannot express directly, and which CLOS gives for free.
+
+In the sources, \texttt{matches-p} is specialised on exactly those pairs:
+
+\begin{center}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Query atom class} & \textbf{Description / node class} \\
+\midrule
+\texttt{substrate-simple-node-query}    & \texttt{simple-node-description} \\
+\texttt{substrate-racer-node-query}     & \texttt{racer-node-description} \\
+\texttt{substrate-predicate-node-query} & \texttt{substrate-node} \\
+\multicolumn{2}{@{}l@{}}{\itshape …and the corresponding edge variants} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Each delegates to \texttt{implies-p}, itself generic: its default method is a
+syntactic CNF implication test for data substrates, while a DL-backed description
+resolves instead to description logic entailment. Retrieval is selected the same
+way --- \texttt{retrieve-\allowbreak matching-\allowbreak objects} carries a generic method on
+\emph{(substrate, unary query)} and a specialised one on \emph{(racer substrate,
+unary query)}. Query subsumption uses a third such multimethod,
+\texttt{entails-p}, defined on \emph{query $\times$ query}.
+
+Multiple inheritance then makes the class space a \emph{product lattice} rather
+than a tree. Classes are formed by crossing a substrate family with a role:
+
+\begin{center}
+\footnotesize
+\begin{tabular}{@{}l@{\;=\;}l@{}}
+\toprule
+\texttt{data-substrate-node-query} & \texttt{data-substrate-query} $\times$ \texttt{unary-query} \\
+\texttt{data-substrate-edge-query} & \texttt{data-substrate-query} $\times$ \texttt{binary-query} \\
+\texttt{midelora-instance-retrieval-query} & \texttt{midelora-abox-query} $\times$ \texttt{instance-retrieval-query} \\
+\texttt{mirror-sql-data-substrate} & \texttt{sql-data-substrate} $\times$ \texttt{mirror-data-substrate} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The consequence is the point. \textbf{Which entailment procedure runs is decided
+per atom, at runtime, by method resolution}, and behaviour can be defined at
+whichever level of the lattice fits --- generically for all substrates, or
+specifically for one combination. A propositional substrate gets propositional
+deduction; a DL substrate a tableau prover; an RCC substrate composition-table
+reasoning; a geometric substrate a spatial index. Same query language, same atom
+syntax, different entailment relation, chosen by the pair.
+
+\begin{note}
+\textbf{Entailment regimes, reached from the other side.} SPARQL arrived at a
+comparable idea with \emph{entailment regimes} --- one query syntax, several
+entailment relations (RDF, RDFS, D-entailment, OWL 2 Direct and RDF-Based
+Semantics, RIF), so that basic graph pattern matching can be interpreted under a
+chosen semantics. That became a W3C Recommendation in March 2013, with the
+underlying work circulating in the working group for some years before.
+
+The mechanism here differs in grain. A SPARQL entailment regime is fixed
+\emph{per query or dataset}: one regime governs the whole evaluation. Here the
+method is selected \emph{per atom, against the substrate that atom touches}, so a
+single hybrid query can have its concept atoms answered by a DL reasoner, its
+spatial atoms by a geometric index and its data atoms by a syntactic test --- in
+one conjunction, under one semantics.
+
+This is also the mechanism behind the thesis's central claim. Covering
+\emph{regions of the design space rather than points} is not a slogan about
+generality: the dispatch lattice \emph{is} the region, and a new point in it is a
+new class plus the methods that distinguish it. The same construction reappears
+one layer down as the MiDeLoRa space --- a prover chosen by \emph{task $\times$
+logic $\times$ ABox class} --- applied to reasoners instead of atoms.
+\end{note}
+
 \subsection{The query answering engine}
 
 Query processing is a seven-stage pipeline.
@@ -635,6 +715,85 @@ The need for $n$-ary generators and testers is addressed, as is the use of index
 structures generally, support for hybrid substrate query languages, the query
 lifecycle and API, the concrete syntax, and the library of standard atoms
 (simple atoms, RacerPro description atoms, and $\lambda$-atoms).
+
+\subsection{The optimisations, and what each was worth}
+
+The thesis treats query optimisation as a first-class subject and --- unusually
+--- measures each technique separately, reporting the ones that disappointed as
+plainly as the ones that worked. The full set:
+
+\textbf{Semantic optimisation} rewrites the query graph before planning, by two
+means. \emph{Query classification} inserts the query into the QBox, so a
+subsuming query's stored answers can serve as a superset cache for candidate
+generation and a subsumed query's answers can be returned outright; a query
+found equivalent to $\top$ is flagged as tautological and one equivalent to
+$\bot$ as unsatisfiable, short-circuiting the evaluation entirely.
+\emph{Query realization} --- which the thesis states had not previously been
+investigated --- is the query analogue of ABox realization: a conjunctive query
+is augmented with \emph{implied atoms} so the search is better informed. Given
+$(x,\forall R.D) \wedge (x,C) \wedge (x,y,R)$, any $y$ must be a $D$ instance,
+but no atom says so, and a generator for $y$ would enumerate $\top$ instances
+instead of $D$ instances. Adding the implied $(y,D)$ and $(y,\exists R^{-1}.C)$
+cuts the branching factor. The thesis frames this explicitly in constraint-solving
+terms --- it is \emph{forward checking}, and what it avoids is \emph{thrashing}
+--- and is candid about the trade-off: more specific implied atoms make candidate
+generation itself more expensive, so the suggested criterion is to add only atoms
+an index can support.
+
+\textbf{Existential variables.} A variable that appears in no other atom and not
+in the head need only be \emph{witnessed}, not enumerated; generators stop after
+the first binding.
+
+\textbf{Heuristic plan optimisation.} The conjunct ordering, as described above:
+each atom takes a role (generator, successor generator, predecessor generator,
+tester) determined by its position, and the optimiser costs the alternatives.
+
+\textbf{Code-template translation.} Processing functions are generated by nesting
+code templates at compile time, so the whole query collapses into a single
+function for the root of the query graph --- eliminating both the per-node
+\texttt{funcall} chain and graph traversal at answering time.
+
+\textbf{Informed, incremental generators}, which consult index structures and
+stream results, plus efficient processing functions for role atoms, and $n$-ary
+generators and testers.
+
+\begin{center}
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Technique} & \textbf{Measured} & \textbf{Verdict in the thesis} \\
+\midrule
+Heuristic plan optimisation & up to $10{,}000\times$ & indispensable \\
+Existential variables & $1.013\times$ typical & negligible in practice… \\
+ & $350\times$ worst case & …but decisive on cross-product queries \\
+Query classification (QBox) & $2.1\times$ & effective, and grows with query count \\
+Code-template translation & $1.568\times$ & \enquote{not as effective as hoped} \\
+Query realization & --- & novel; not evaluated in time \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Two of these deserve comment. The heuristic optimiser is not an optimisation but
+a precondition: without it, even simple queries over a single university
+department do not finish in acceptable time. And the QBox figure understates the
+mechanism, because it is measured over only four queries. The underlying numbers
+are striking --- a DISKQL query over 2,694 map objects takes \textbf{155\,s}
+cold; a more specific query that finds it as a parent then takes \textbf{17\,s},
+the next \textbf{0.38\,s}, and a fourth, classified between two existing nodes,
+\textbf{0.72\,s}. Without classification the same four cost 161, 123, 45 and 41
+seconds. The saving compounds as the QBox fills.
+
+\begin{note}
+\textbf{On priority.} These techniques were documented and implemented in
+2004--05, and several were evaluated. Individual ingredients have longer
+lineages --- subsumption-based caching goes back to work the thesis itself cites
+from 1994, forward checking to constraint solving, generator/tester plan
+ordering to relational query optimisation. What is specific here is the
+\emph{combination}: this set of techniques assembled for conjunctive query
+answering over description logic ABoxes, implemented in a system with users, and
+measured technique by technique. That is a claim that rests on the dates and the
+numbers above, both of which are checkable.
+\end{note}
 
 \subsection{Four query languages on one framework}
 
@@ -790,8 +949,8 @@ systems:
   have to be redone --- which is why caches matter so much for DDJ.
 
   MiDeLoRa adds a second, \emph{causal} chain between command objects:
-  \texttt{precondition-for-actions}, with an inverse
-  \texttt{postcondition-of-actions} for navigation in both directions. On a
+  \texttt{pre\-condition-\allowbreak for-\allowbreak actions}, with an inverse
+  \texttt{post\-condition-\allowbreak of-\allowbreak actions} for navigation in both directions. On a
   clash, the responsible branch points are located, their command objects
   marked, the causal chains traversed to their ends, and a second pass unmarks
   any command having an unmarked causal successor. The remaining marked commands
@@ -1002,8 +1161,8 @@ not know:
 \item \textbf{alcircc5} --- \emph{current} work on the open decidability question
   from Chapter 3: a Lean~4 machine-checked decision procedure for the
   $\forall$PO-free fragment, with the full logic still open
-\item \textbf{shacl-nrql-comparison} --- a retrospective analysis of nRQL against
-  SHACL, SPARQL~1.1 and property graphs
+\item \textbf{shacl-\allowbreak nrql-\allowbreak comparison} --- a retrospective analysis of nRQL against
+  SHACL, SPARQL 1.1 and property graphs
 \item \textbf{OntoLisp}, \textbf{RacerPorter} --- related Common Lisp semantic web
   tooling
 \end{itemize}
