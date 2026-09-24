@@ -72,7 +72,69 @@ specification describes a simplification of the implemented design.
 
 ---
 
-## 2. `L_V(i)` is typed inconsistently in Chapter 4
+## 2. The dependency-directed backtracking algorithm (Chapter 6)
+
+**Chapter 6, \"What the command history unlocks\", item 2.** The thesis describes
+a two-phase marking algorithm for true dependency-directed backtracking (DDB), as
+opposed to the weaker backjumping (DDJ) that contemporary reasoners used. Two
+problems in the description, and one fact about the implementation.
+
+### The traversal runs in the wrong direction
+
+The slot is introduced as recording **\"which other command objects are causal
+for the executed action\"** — that is, *backward* pointers to an action's own
+causes. Phase 1 then says that by traversing **those same associations** one
+identifies *\"the ends of the command-**effect** causal chain\"*.
+
+Effects run forward; causes run backward. Following an action's causes cannot
+reach its effects. Either the slot is forward-pointing and the gloss is wrong, or
+the gloss is right and phase 1 should traverse `postcondition-…` instead. As
+written the two cannot both hold.
+
+### The AND/OR semantics of multiple supports is unspecified
+
+Phase 2 unmarks any command having an **unmarked** support, so an action survives
+if *any* of its supports survives. That is correct if multiple entries are
+**alternative justifications**, as in a truth maintenance system.
+
+It is wrong if they are the **conjunctive premises of one rule application** —
+which is the normal case in a tableau, where a rule fires only when all its
+premises are present. Under that reading an action must be retracted as soon as
+*any* premise is, and the algorithm would keep assertions whose justification has
+been destroyed. The thesis does not say which reading is intended, and the two
+give different results whenever a command has more than one support.
+
+### It was never implemented
+
+Checked against the [MiDeLoRa sources](https://github.com/lambdamikel/MiDeLoRa).
+The slots exist and are properly declared on `abox-item`:
+
+```lisp
+(choice-points             :initform nil :initarg :choice-points)
+(precondition-for-actions  :initform nil :initarg :precondition-for-actions)
+(postcondition-for-actions :initform nil :initarg :postcondition-for-actions)
+```
+
+Across the entire repository these two slots occur in exactly **two** places:
+that declaration, and the list of slots `copy-node` copies. They are never
+written, never read, and never traversed. No marking algorithm exists.
+
+What *is* implemented is `global-rollback` — **chronological** rollback of the
+command history, whose cost is the 20.2 s reported in Chapter 7 — together with
+`sort-choice-points`, which supports backjumping. So MiDeLoRa does DDJ, and the
+DDB design remained a design.
+
+This is consistent with the thesis's own statement that these potentials were
+\"not all realised\"; it pins down exactly which one was not. It also explains
+the direction error: a description never disciplined by a working implementation
+has nothing to catch it.
+
+*(Minor, same area: the thesis calls the inverse slot `postcondition-of-actions`;
+the code calls it `postcondition-for-actions`.)*
+
+---
+
+## 3. `L_V(i)` is typed inconsistently in Chapter 4
 
 The definition gives $L_V : V \rightarrow \mathcal{L}_V$ — a node maps to a
 *single* expression, and the chapter uses it that way when introducing
@@ -87,7 +149,7 @@ separately defined structure, not this slip.)
 
 ---
 
-## 3. The substrate model definition is over-determined
+## 4. The substrate model definition is over-determined
 
 **Chapter 4, Definition (model relation for substrates).** Conditions 1–2 require
 *membership* ($i^\mathcal{I} \in (L_V(i))^\mathcal{I}$, reading labels as
@@ -103,7 +165,7 @@ definition does not state it.
 
 ---
 
-## 4. Figure 1.2 c) carries the wrong title
+## 5. Figure 1.2 c) carries the wrong title
 
 All three sub-figures of Figure 1.2 are titled *Geschichtete Architektur*
 (layered architecture), including c), which the accompanying text explicitly
@@ -111,7 +173,7 @@ describes as the **integrated** approach. A copy-paste error in the UMLet source
 
 ---
 
-## 5. "RDMS" for "RDBMS"
+## 6. "RDMS" for "RDBMS"
 
 Throughout the Figure 1.2 sub-figures.
 
@@ -119,8 +181,7 @@ Throughout the Figure 1.2 sub-figures.
 
 ## Where to look next
 
-If anyone wants to continue this, the **dependency-directed backtracking marking
-algorithm in Chapter 6** is the place to start. It is a two-phase mark/unmark
-fixpoint over a causal graph of command objects — exactly the shape where an
-off-by-one in the unmark condition hides silently and still behaves correctly on
-small examples.
+The DDB algorithm was the obvious candidate and is now item 2 above. The
+remaining unchecked areas are the query subsumption and satisfiability algorithms
+of Chapter 5, the normal-form transformations and algebraic semantics of
+Chapter 4, and Chapter 2 throughout.
