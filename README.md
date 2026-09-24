@@ -129,6 +129,16 @@ reasoner architecture, that chapter is the reason this repository exists.
 
 ---
 
+> **Note on authorship.** The English summary and the errata in this repository
+> were drafted in 2026 by Claude (Anthropic), working from the dissertation's
+> original LaTeX sources, the published source code and the bibliographic
+> record, and were directed, corrected and approved by the author. Their claims
+> are tied to independently checkable things — measurements from the evaluation
+> chapter, identifiers from the sources, dates from the bibliography.
+>
+> **The dissertation itself is not AI-assisted work.** It was submitted in 2005,
+> close to two decades before such tools existed, and is entirely the author's own.
+
 ## Contents of this repository
 
 | File | |
