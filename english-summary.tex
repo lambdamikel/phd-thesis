@@ -58,6 +58,11 @@
 \begin{document}
 \maketitle
 
+\begin{center}
+\includegraphics[width=4.2cm]{figs/logos-cover.jpg}
+\end{center}
+
+
 \begin{abstract}
 \noindent
 This is an extended English summary of a 586-page German dissertation. It
@@ -372,9 +377,16 @@ Supporting both perspectives means the ABox query language must be not only
 \centering
 \includegraphics[width=0.62\textwidth]{figs/owltree.png}
 \caption{The \textsc{OWL Tree}, a browser front end to the Semantic Web
-retrieval service. Conjunctive queries are assembled by growing a tree of
-concepts and roles --- here \texttt{FullProfessor}, \texttt{teacherOf},
-\texttt{GraduateCourse} over the LUBM vocabulary --- and translated into nRQL.}
+retrieval service, built by \textbf{Matthias Flege, Thomas Hirsch, Torben Rebhan
+and Kamil Sokolski} in a project seminar at TUHH, supervised by the author.
+Tree-structured conjunctive queries are assembled from concepts and roles ---
+here \texttt{FullProfessor}, \texttt{teacherOf}, \texttt{GraduateCourse} over the
+LUBM vocabulary --- submitted to a RacerPro server as nRQL, and the result tuples
+presented for inspection. The team also extended the LUBM generator so that
+individuals were \emph{real} web resources rather than synthetic URIRefs ---
+TUHH staff homepages for \texttt{employee}, course pages for \texttt{course},
+STS publication PDFs for \texttt{publication} --- making every answer a
+clickable link to the thing it denoted.}
 \end{figure}
 
 \subsection{The consolidated requirements}
@@ -1412,8 +1424,9 @@ supported}, technical resemblance is \textbf{clear}, conceptual anticipation is
 \begin{note}
 \textbf{Two dates, both correct --- and the earlier one matters.} The
 dissertation was \textbf{submitted in 2005}. It was \textbf{defended on 14 April
-2008} and published by Logos Verlag that year, the three-year gap being
-examination time, not work.
+2008}; the three-year gap was examination time, not work. (Logos Verlag
+catalogues the book edition as 2009, so both years appear in the wild --- the
+dissertation is 2008, the book 2009.)
 
 This is worth stating wherever the work is cited, because the \textbf{2005
 submission date is the one that carries the precedence claims}. The content
