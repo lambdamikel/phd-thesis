@@ -636,6 +636,15 @@ deduction; a DL substrate a tableau prover; an RCC substrate composition-table
 reasoning; a geometric substrate a spatial index. Same query language, same atom
 syntax, different entailment relation, chosen by the pair.
 
+There is a second speed to this. For \emph{query atoms} the method is resolved at
+runtime, because the substrate a query touches is not known until it runs. For
+\emph{tableau rules} the same lattice is resolved once, at composition time: a
+rule is conceptually a multimethod on \emph{(language class, ABox class)}, but
+what the dispatch returns is a \emph{code template}, and the templates are
+composed into a prover before it is ever run. Selection by dispatch, execution by
+compiled code --- the dispatch cost is paid once per prover rather than once per
+rule application.
+
 \begin{note}
 \textbf{Entailment regimes, reached from the other side.} SPARQL arrived at a
 comparable idea with \emph{entailment regimes} --- one query syntax, several
@@ -793,6 +802,49 @@ ordering to relational query optimisation. What is specific here is the
 answering over description logic ABoxes, implemented in a system with users, and
 measured technique by technique. That is a claim that rests on the dates and the
 numbers above, both of which are checkable.
+\end{note}
+
+\subsection{Operational design: lifecycle, concurrency, incrementality}
+
+The requirements the thesis sets for the engine are operational rather than
+semantic, and the list reads more like a database query manager than a research
+prototype: incremental answering; \textbf{multi-user operation with queries
+processed concurrently}; \textbf{lifecycle management}, with queries as objects
+reachable and manipulable through an API; and resource-configurable answering ---
+proactive or on-demand tuple computation, incomplete modes, and phased
+computation where cheap tuples are found first and expensive ones only on demand.
+
+Three mechanisms deliver this.
+
+\textbf{Continuation-passing style.} Processing functions are written so that
+each atom's function calls a \emph{continuation} to extend the current binding.
+That is what makes results streamable, suspendable and abortable partway
+through --- and it is precisely what the code-template compiler optimises away,
+nesting the continuations into a single function at the query root so the
+\texttt{funcall} chain disappears at answering time.
+
+\textbf{A process pool.} The sources carry a dedicated process pool, and the
+control surface is explicit: \texttt{prepare-to-run-query},
+\texttt{query-running-p}, \texttt{abort-query}, \texttt{abort-process},
+\texttt{wait-for-request-or-abort} --- with the same set for rules. Queries run
+in the background without blocking the caller, and can be cancelled while
+running.
+
+\textbf{Queries as first-class objects.} A query is not a string submitted and
+forgotten. It is an object with a state, a lifecycle and an API: prepare it, start
+it, ask it for the next tuple, inspect what it is doing, abort it, or come back
+to it later. Incremental retrieval is a separate module in the sources
+(\texttt{get-next-tuple}).
+
+\begin{note}
+\textbf{Worth noticing in a 2005 reasoner.} Incremental and abortable evaluation,
+concurrent execution of independent queries, non-blocking background processing,
+and a managed query lifecycle are not what description logic systems of the
+period typically offered --- reasoners were usually synchronous, single-query,
+run-to-completion. Combining them with a reasoner-backed query semantics is the
+part that was unusual, and it is what made the two-phase and incomplete modes
+operationally meaningful: a mode that trades completeness for resources is only
+useful if the caller can also stop, resume, and ask for more.
 \end{note}
 
 \subsection{Four query languages on one framework}
@@ -994,9 +1046,54 @@ abstractions for defining provers, and an \textbf{arsenal of tableau rules} ---
 standard rules, rules for non-standard DLs, and blocking conditions. State-of-the-art
 optimisations are surveyed and accommodated.
 
-Implementation covers set representation, the command objects and history, the
-rule definition mechanism, provers and rule application chains, and the
-representation of models for the model merging test.
+Implementation covers set representation, the command objects and history,
+provers and rule application chains, and the representation of models for the
+model merging test.
+
+\subsection{The rule definition language}
+
+The construction kit is driven by a \textbf{domain-specific language} for writing
+tableau rules --- a Common Lisp macro language implementing a \emph{five-port
+model}. It does not remove the need to program rules; it supplies the
+abstractions that make rules composable.
+
+A rule is a point on the $DL \times K$ plane of the MiDeLoRa space, written as
+what is conceptually a CLOS multimethod on a language class and an ABox class:
+
+\begin{center}
+\texttt{(defrule or-expansion (dl abox) …)}
+\end{center}
+
+Rules therefore \emph{inherit along both axes} by ordinary CLOS semantics --- a
+rule for a more expressive logic inherits the implementation from a less
+expressive one unless it overrides it --- and where the space's structure does not
+give the right answer, a rule can request another's implementation outright with
+\texttt{:inherit-from}. The two outcomes of a rule are marked in its body by
+\texttt{+insert-positive-code+} and \texttt{+insert-negative-code+}; the re-entry
+port is implicit in the return of control, and the backtracking port is
+\texttt{return-from prover}, which passes branch-point identifiers up to the
+parent node in the search tree.
+
+The performance decision is the interesting one. \texttt{defrule} does not define
+the rule directly --- it defines a method returning a \textbf{code template}, and
+the rule application chain selects templates by $DL \times K$ at
+\emph{composition time}. Late binding chooses the implementation once, when the
+prover is assembled, instead of on every rule application. Because rules are
+templates rather than functions, the compiler is then free either to emit a call
+to the next rule or to \emph{inline its code} --- \enquote{code unfolding} ---
+though only when the next rule is deterministic, since a nondeterministic rule
+needs a fresh incarnation on the search stack to preserve its context.
+
+\begin{note}
+\textbf{One measurement that is missing.} Whether compiling assembled prover
+definitions, rather than leaving them to be evaluated, actually pays is a natural
+question for this design, and the thesis does not answer it --- no such
+comparison is reported. The nearest published figure is from the query side,
+where the same code-template technique was measured at $1.568\times$ and judged
+\enquote{not as effective as hoped}. Whether provers behave the same way is
+open; the rule-application path is much hotter than the query-translation path,
+so the result need not transfer.
+\end{note}
 
 \subsection{Instantiations}
 
@@ -1145,6 +1242,56 @@ appear in it beyond a mention.
 The thesis also carries appendices worth knowing about: the LUBM TBox in KRSS
 syntax, the LUBM taxonomy, the two DISK maps, and a register of acronyms and
 abbreviations (A.5) that materially helps a reader of the German.
+
+\subsection{The dated record}
+
+Questions of precedence are best settled by dates, so here is the publication
+record underlying the thesis, taken from its own bibliography.
+
+\begin{center}
+\small
+\begin{tabular}{@{}l p{6.1cm} p{4.3cm}@{}}
+\toprule
+\textbf{Year} & \textbf{Work} & \textbf{What it establishes} \\
+\midrule
+2000 & $\mathcal{ALCRA}$ --- $\mathcal{ALC}$ with Role Axioms; Decidable and Undecidable Extensions of $\mathcal{ALC}$ & the spatial DL line opens \\[0.6ex]
+2000--01 & Obstacles on the Way to Spatial Reasoning with Description Logics & undecidability results \\[0.6ex]
+2002 & On Spatial Reasoning with Description Logics & position paper \\[0.6ex]
+2003 & Qualitative Spatial Reasoning with the $\mathcal{ALCI}_{RCC}$-family & the decidable fragments \\[0.6ex]
+2003 & Some Practical Issues in Building a Hybrid Deductive Geographic Information System & guiding domain 1 \\[0.6ex]
+\textbf{2004} & \textbf{Querying the Semantic Web with Racer + nRQL} & \textbf{nRQL in public} \\[0.6ex]
+2004 & Extended Query Facilities for Racer & the query facilities \\[0.6ex]
+\textbf{2005} & \textbf{A High Performance Semantic Web Query Answering Engine} & \textbf{the engine and its optimiser} \\[0.6ex]
+2006 & On the Scalability of Description Logic Instance Retrieval & the retrieval optimisations \\[0.6ex]
+2006 & A Flexible DL-based Architecture for Deductive Information Systems & the framework \\[0.6ex]
+2007 & Design Principles for User Friendly, Interactive DL interfaces (OWLED) & the GUI work \\[0.6ex]
+2009 & Flexible Software Architectures for Ontology-Based Information Systems, JAL 7(1), 75--99 & the overview; accepted 2007 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Set against that, the dissertation was \textbf{submitted in 2005};
+\textbf{SPARQL 1.0} became a W3C Recommendation in \textbf{January 2008}; and
+\textbf{SPARQL 1.1}, with subqueries, \texttt{NOT EXISTS}, \texttt{MINUS} and the
+\textbf{entailment regimes} specification, in \textbf{March 2013}.
+
+\begin{note}
+\textbf{Read this record honestly, in both directions.} The dates are what they
+are: nRQL was described in print in 2004 and its optimising engine in 2005, and
+the features SPARQL reached in 2013 were in it then. That is chronological
+precedence and it is checkable.
+
+It is also worth saying that most of these are \emph{workshop} papers --- the
+Description Logic workshop, KRDB, OWLED --- with one journal article at the end.
+Workshop proceedings are cited less, indexed less, and read less than journal or
+conference publications, which is one concrete reason this work is less visible
+than its dates would suggest. It is the sort of thing worth knowing about one's
+own record rather than being surprised by.
+
+And precedence is not influence. Similar ideas arrived later in other systems;
+whether they arrived independently, by way of this work, or through the shared
+background all of it drew on, the dates alone cannot say.
+\end{note}
 
 \subsection{The code is public}
 
